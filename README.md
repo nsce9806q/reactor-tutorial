@@ -62,7 +62,7 @@ Mono 또한 마찬가지로 Reactive Streams의 Publisher를 구현하고 여러
 - `static <T> Mono<T> empty()`: 아무 데이터도 발행하지 않고 완료하는 Mono 객체를 생성한다.
 - `static <T> Mono<T> never()`: 아무 데이터도 발행하지 않고 완료 또는 에러를 포함한 아무 시그널도 보내지 않는 Mono 객체를 생성한다.
 - `static <T> Mono<T> just(T data)`: 1개의 데이터를 발행하는 Mono 객체를 생성하고 완료한다.
-- `static <T> Mono<T> error(Throwable error)`: 지정된 오류와 함께 완료하는 Flux 객체를 생성한다.
+- `static <T> Mono<T> error(Throwable error)`: 지정된 오류와 함께 완료하는 Mono 객체를 생성한다.
 
 src/main/java/study/practice/**Part02Mono.java**
 ```java
