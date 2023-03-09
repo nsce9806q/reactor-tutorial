@@ -54,7 +54,7 @@ public class Part03StepVerifier {
   // TODO Expect 3600 elements at intervals of 1 second, and verify quicker than 3600s
   // by manipulating virtual time thanks to StepVerifier#withVirtualTime, notice how long the test takes
   void expect3600Elements(Supplier<Flux<Long>> supplier) {
-    StepVerifier.withVirtualTime(supplier).expectSubscription().thenAwait(Duration.ofHours(1)).expectNextCount(3600).verifyComplete();
+    StepVerifier.withVirtualTime(supplier).thenAwait(Duration.ofHours(1)).expectNextCount(3600).verifyComplete();
   }
 
   private void fail() {
