@@ -17,7 +17,7 @@ dependencies {
 **Flux는 Reactive Streams의 Publisher를 구현하며 Flux Sequence를 생성, 변형, 조합하는 연산자들을 내장하는 클래스이다.**  
 Flux는 **0-N개**의 데이터를 발행(emit)하고 (데이터를 발행할 때 마다 `onNext` 이벤트를 발생시킨다) 완료(`onComplete`) 또는 에러처리(`onError`)한다. (terminal event가 발생할 때까지 Flux는 무한하다.)
 
-### 메서드 정리
+### 메소드 정리
 - `static <T> Flux<T> empty()`: 아무 데이터도 발행하지 않고 완료하는 Flux 객체를 생성한다.
 - `static <T> Flux<T> just(T... data)`: 1개 이상의 데이터를 발행하는 Flux 객체를 생성하고 완료한다.
 - `static <T> Flux<T> fromIterable(Iterable<? extends T> it)`: (List같은) Iterable 객체에 있는 데이터를 발행하는 Flux 객체를 생성한다.
@@ -63,7 +63,7 @@ public class Part01Flux {
 Mono 또한 마찬가지로 Reactive Streams의 Publisher를 구현하고 여러 연산자들을 포함하지만, **Flux와 달리 0-1개만의 데이터를 발행한다.**  
 그래서 Mono는 valued(1개의 데이터를 발행하고 완료), empty(데이터 발행없이 완료), error(에러 처리) 중에 하나다.
 
-### 메서드 정리
+### 메소드 정리
 - `static <T> Mono<T> empty()`: 아무 데이터도 발행하지 않고 완료하는 Mono 객체를 생성한다.
 - `static <T> Mono<T> never()`: 아무 데이터도 발행하지 않고 완료 또는 에러를 포함한 아무 시그널도 보내지 않는 Mono 객체를 생성한다.
 - `static <T> Mono<T> just(T data)`: 1개의 데이터를 발행하는 Mono 객체를 생성하고 완료한다.
@@ -102,7 +102,7 @@ public class Part02Mono {
 정적 팩토리 메서드 `create`로 `StepVerifier`의 인스턴스를 생성할 수 있다.  
 그리고 마지막에는 반드시 `verify`(`verifyComplete()`, `verifyError()` 등) 메서드를 호출 하여야만 한다.
 
-### 메서드 정리
+### 메소드 정리
 - `Step<T> expectNext(T t)`: Publisher가 발행하는 데이터와 **기대값(t)을 검증**한다.
 - `Step<T> assertNext(Consumer<? super T> assertionConsumer)`: AssertionJ나 Junit 같은 테스트 라이브러리를 사용하여 **Consumer 내부에서 검증**할 수 있다. Publisher가 발행하는 데이터의 속성(property)을 검증할 때 활용 할 수 있다.
 - `Step<T> expectNextCount(long count)`: Publisher가 발행하는 **데이터의 수(count)를 검증**한다.
@@ -148,6 +148,46 @@ public class Part03StepVerifier {
 
   private void fail() {
     throw new AssertionError("workshop not implemented");
+  }
+
+}
+```
+## #4 Transfrom
+Reactor는 데이터를 변환(transform)할 때 몇가지의 연산자를 제공한다.
+
+### 메소드 정리
+- `<R> Flux<R> map(Function<? super T, ? extends R> mapper)`: flux에서 발행하는 데이터들을 **동기적으로 1대1 변환**한다.
+- `<R> Flux<R> flatMap(Function<? super T, ? extends Publisher<? extends R>> mapper)`: flux에서 발행하는 데이터들을 **비동기적으로 Publisher로 변환**하고, 합쳐서 **하나의 flux로 반환**한다.
+
+`map`을 사용하면 람다 변환 함수를 통해 flux가 발행하는 데이터를 변환할 수 있다.  
+만약에 외부 API를 사용하는 것처럼 변환 함수에 지연(latency)이 있다면 `flatmap`을 사용하면 된다.  
+  
+`map`을 사용하여 flux가 발행하는 데이터를 `Publisher`로 변환한다면, `Flux<Publisher<T>>`가 되지만, `flatmap`을 사용한다면
+Publisher를 모아 하나의 `Flux<T>`로 합쳐준다.
+
+### 예제: src/main/java/study/practice/**Part04Transform.java**
+```java
+public class Part04Transform {
+  
+  // TODO Capitalize the user username, firstname and lastname
+  Mono<User> capitalizeOne(Mono<User> mono) {
+    return mono.map(user -> new User(user.getUsername().toUpperCase(), user.getFirstname().toUpperCase(),
+        user.getLastname().toUpperCase()));
+  }
+
+  // TODO Capitalize the users username, firstName and lastName
+  Flux<User> capitalizeMany(Flux<User> flux) {
+    return flux.map(user -> new User(user.getUsername().toUpperCase(), user.getFirstname().toUpperCase(),
+        user.getLastname().toUpperCase()));
+  }
+  
+  // TODO Capitalize the users username, firstName and lastName using #asyncCapitalizeUser
+  Flux<User> asyncCapitalizeMany(Flux<User> flux) {
+    return flux.flatMap(this::asyncCapitalizeUser);
+  }
+
+  Mono<User> asyncCapitalizeUser(User u) {
+    return Mono.just(new User(u.getUsername().toUpperCase(), u.getFirstname().toUpperCase(), u.getLastname().toUpperCase()));
   }
 
 }
