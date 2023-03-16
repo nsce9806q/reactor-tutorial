@@ -192,3 +192,72 @@ public class Part04Transform {
 
 }
 ```
+## #5 Merge
+아래 메소드를 사용해서 Publisher을 하나의 Flux로 합칠 수 있다.
+### 메소드 정리
+- `Flux<T> mergeWith(Publisher<? extends T> other)` : Publisher와 또 다른 Publisher(other)를 하나의 Flux로 합친다. **데이터의 순서가 보장되지 않는다.** (with interleave)
+- `Flux<T> concatWith(Publisher<? extends T> other)`: Publisher와 또 다른 Publisher를(other) 하나의 Flux로 합친다. **데이터의 순서를 지킨다.** (no interleave)
+### 예제: src/main/java/study/practice/Part05Merge.java
+```java
+public class Part05Merge {
+  
+   // TODO Merge flux1 and flux2 values with interleave
+   Flux<User> mergeFluxWithInterleave(Flux<User> flux1, Flux<User> flux2) {
+      return flux1.mergeWith(flux2);
+   }
+   
+   // TODO Merge flux1 and flux2 values with no interleave (flux1 values and then flux2 values)
+   Flux<User> mergeFluxWithNoInterleave(Flux<User> flux1, Flux<User> flux2) {
+      return flux1.concatWith(flux2);
+   }
+   
+   // TODO Create a Flux containing the value of mono1 then the value of mono2
+   Flux<User> createFluxFromMultipleMono(Mono<User> mono1, Mono<User> mono2) {
+      return mono1.concatWith(mono2);
+   }
+
+}
+```
+## #6 Request
+Reactive Streams에는 **back pressure**라는 개념이 있는데, 이는 `Subscriber`가 받아서 처리할 데이터의 양을 `Publisher`에게 알려줌으로써 조절하는 반응 매커니즘이다.  
+데이터 수요(demand)는 `Subscription` 단계에서 완료된다.  
+`Subscription`은 `subscribe()` 호출에 의해 생성되며, `cancel()` 또는 `request()`에 의해 조작된다.
+
+### 메소드 정리
+- `static <T> FirstStep<T> create(Publisher<? extends T> publisher, long n)`: 받을 데이터의 수(n)를 설정하여 StepVerifier 인스턴스를 생성한다.
+- `Flux<T> log()`: Flux를 로깅한다. 
+
+### 예제: src/main/java/study/practice/Part06Request.java
+```java
+public class Part06Request {
+
+   ReactiveRepository<User> repository = new ReactiveUserRepository();
+
+   // TODO Create a StepVerifier that initially requests all values and expect 4 values to be received
+   StepVerifier requestAllExpectFour(Flux<User> flux) {
+      return StepVerifier.create(flux).expectNextCount(4).expectComplete();
+   }
+
+   // TODO Create a StepVerifier that initially requests 1 value and expects User.SKYLER then requests another value and expects User.JESSE then stops verifying by cancelling the source
+   StepVerifier requestOneExpectSkylerThenRequestOneExpectJesse(Flux<User> flux) {
+      return StepVerifier.create(flux)
+              .thenRequest(1).expectNext(User.SKYLER)
+              .thenRequest(1).expectNext(User.JESSE)
+              .thenCancel();
+   }
+
+   // TODO Return a Flux with all users stored in the repository that prints automatically logs for all Reactive Streams signals
+   Flux<User> fluxWithLog() {
+      return repository.findAll().log();
+   }
+
+   // TODO Return a Flux with all users stored in the repository that prints "Starring:" at first, "firstname lastname" for all values and "The end!" on complete
+   Flux<User> fluxWithDoOnPrintln() {
+      return repository.findAll()
+              .doFirst(() -> System.out.println("Starring:"))
+              .doOnNext(user -> System.out.println(user.getFirstname() + " " + user.getLastname()))
+              .doOnComplete(() -> System.out.println("The end!"));
+   }
+   
+}
+```
