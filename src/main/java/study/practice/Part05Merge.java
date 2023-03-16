@@ -16,7 +16,7 @@ import study.domain.User;
  */
 public class Part05Merge {
 
-//=============ㅁ===========================================================================
+//========================================================================================
 
   // TODO Merge flux1 and flux2 values with interleave
   Flux<User> mergeFluxWithInterleave(Flux<User> flux1, Flux<User> flux2) {
