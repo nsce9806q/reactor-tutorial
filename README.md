@@ -261,3 +261,51 @@ public class Part06Request {
    
 }
 ```
+## #7 Error
+### 메소드 정리
+- `<E extends Throwable> Mono<T> onErrorReturn(Class<E> type, T fallbackValue)`: 에러(type)가 발생하면 다른 데이터(fallbackValue)를 전달한다.
+- `Flux<T> onErrorResume(Function<? super Throwable, ? extends Publisher<? extends T>> fallback)`: 에러가 발생하면 함수를 사용하여 다른 데이터(Publisher 형태로)를 전달한다.
+
+`Unchecked Exception`(Runtime Exception, **위 메소드는 Unchecked Exception을 처리**할 때 사용한다.) 대신,
+`Checked Exception`을 처리할 때에는 다소 복잡하다. Publisher의 연산자(예를 들면 map) 내부에서 
+**`Checked Exception`이 발생한다면 `try-catch` 구문 등을 사용하여 `Runtime Exception`으로 변환**해야한다.  
+
+`Exceptions.propagate`를 사용하면 `Checked Exception`을 `Runtime Exception`으로 감쌀 수 있다.
+```java
+public class Part07Errors {
+  
+  // TODO Return a Mono<User> containing User.SAUL when an error occurs in the input Mono, else do not change the input Mono.
+  Mono<User> betterCallSaulForBogusMono(Mono<User> mono) {
+    return mono.onErrorReturn(IllegalStateException.class, User.SAUL);
+  }
+
+  // TODO Return a Flux<User> containing User.SAUL and User.JESSE when an error occurs in the input Flux, else do not change the input Flux.
+  Flux<User> betterCallSaulAndJesseForBogusFlux(Flux<User> flux) {
+    return flux.onErrorResume(fallback -> {return Flux.just(User.SAUL, User.JESSE);});
+  }
+
+  // TODO Implement a method that capitalizes each user of the incoming flux using the
+  // #capitalizeUser method and emits an error containing a GetOutOfHereException error
+  Flux<User> capitalizeMany(Flux<User> flux) {
+    return flux.map(user -> {
+      try {
+        return capitalizeUser(user);
+      } catch (GetOutOfHereException e) {
+        throw Exceptions.propagate(e);
+      }
+    });
+  }
+
+  User capitalizeUser(User user) throws GetOutOfHereException {
+    if (user.equals(User.SAUL)) {
+      throw new GetOutOfHereException();
+    }
+    return new User(user.getUsername(), user.getFirstname(), user.getLastname());
+  }
+
+  protected final class GetOutOfHereException extends Exception {
+    private static final long serialVersionUID = 0L;
+  }
+
+}
+```
