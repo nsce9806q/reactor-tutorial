@@ -271,6 +271,7 @@ public class Part06Request {
 **`Checked Exception`이 발생한다면 `try-catch` 구문 등을 사용하여 `Runtime Exception`으로 변환**해야한다.  
 
 `Exceptions.propagate`를 사용하면 `Checked Exception`을 `Runtime Exception`으로 감쌀 수 있다.
+### src/main/java/study/practice/Part07Errors.java
 ```java
 public class Part07Errors {
   
@@ -281,7 +282,7 @@ public class Part07Errors {
 
   // TODO Return a Flux<User> containing User.SAUL and User.JESSE when an error occurs in the input Flux, else do not change the input Flux.
   Flux<User> betterCallSaulAndJesseForBogusFlux(Flux<User> flux) {
-    return flux.onErrorResume(fallback -> {return Flux.just(User.SAUL, User.JESSE);});
+    return flux.onErrorResume(fallback -> Flux.just(User.SAUL, User.JESSE));
   }
 
   // TODO Implement a method that capitalizes each user of the incoming flux using the
@@ -305,6 +306,60 @@ public class Part07Errors {
 
   protected final class GetOutOfHereException extends Exception {
     private static final long serialVersionUID = 0L;
+  }
+
+}
+```
+## #8 Other Operations
+Reactor는 많은 연산자들이 있으므로 
+[reference guide](https://projectreactor.io/docs/core/release/reference/index.html#which-operator)에서 
+찾아보면 된다. 여기서는 몇개의 유용한 연산자만 다룬다.
+### 메소드 정리
+- `zip`: **두개 이상의 소스를 합친다.** 다양한 형태로 제공된다.
+- `firstWithValue`: 여러 Publisher 소스들 중 하나를 먼저 골라 전달할 수 있다.
+- `Mono<T> ignoreElements()`: `OnNext`: 신호를 무시한다.
+- `Mono<Void> then()`: 해당 Mono에 완료 신호를 보내고 Mono<Void>를 리턴한다.
+- `Mono<T> justOrEmpty(@Nullable T data)`: 인자(data)가 null이면 Mono<Void>를 리턴하고, not null이면 Mono.just(data)를 리턴한다.
+- `Mono<T> switchIfEmpty(Mono<? extends T> alternate)`: 해당 Mono가 null이면 인자로 받은 Mono(alternate)를 리턴하고, not null이면 해당 Mono  리턴한다.
+- `Mono<List<T>> collectList()`: Flux<T>를 Mono<List<T>>로 변환한다.
+### 예제: src/main/java/study/practice/Part08OtherOperations.java
+```java
+public class Part08OtherOperations {
+  
+  // TODO Create a Flux of user from Flux of username, firstname and lastname.
+  Flux<User> userFluxFromStringFlux(Flux<String> usernameFlux, Flux<String> firstnameFlux, Flux<String> lastnameFlux) {
+    return Flux.zip(usernameFlux, firstnameFlux, lastnameFlux).map(tuple -> new User(tuple.getT1(),
+        tuple.getT2(), tuple.getT3()));
+  }
+  
+  // TODO Return the mono which returns its value faster
+  Mono<User> useFastestMono(Mono<User> mono1, Mono<User> mono2) {
+    return Mono.firstWithValue(mono1, mono2);
+  }
+  
+  // TODO Return the flux which returns the first value faster
+  Flux<User> useFastestFlux(Flux<User> flux1, Flux<User> flux2) {
+    return Flux.firstWithValue(flux1, flux2);
+  }
+  
+  // TODO Convert the input Flux<User> to a Mono<Void> that represents the complete signal of the flux
+  Mono<Void> fluxCompletion(Flux<User> flux) {
+    return flux.ignoreElements().then();
+  }
+  
+  // TODO Return a valid Mono of user for null input and non null input user (hint: Reactive Streams do not accept null values)
+  Mono<User> nullAwareUserToMono(User user) {
+    return Mono.justOrEmpty(user);
+  }
+  
+  // TODO Return the same mono passed as input parameter, expect that it will emit User.SKYLER when empty
+  Mono<User> emptyToSkyler(Mono<User> mono) {
+    return mono.switchIfEmpty(Mono.just(User.SKYLER));
+  }
+  
+  // TODO Convert the input Flux<User> to a Mono<List<User>> containing list of collected flux values
+  Mono<List<User>> fluxCollection(Flux<User> flux) {
+    return flux.collectList();
   }
 
 }
