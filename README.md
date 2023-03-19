@@ -458,13 +458,13 @@ public class Part10ReactiveToBlocking {
 ```
 ## 11. Blocking To Reactive
 위와 반대로 Blocking 코드를 Reactive하게 만들 수도 있다.  
-non-reactive한 레거시코드를 어떻게 다룰 것인지가 중요하다.  
+**Non-Reactive한 레거시코드를 어떻게 다룰 것인지가 중요하다.**  
 성능에는 최대한 영향을 주지 않으면서 Blocking 코드(JDBC connection 같은)를 Reactive Pipeline에 통합하려 한다면,
 나머지 파이프라인의 효율은 유지하고 꼭 필요할 때 추가로 쓰레드 생성하는 `Scheduler`를 통해 Blocking한 요소들을 기존 실행 컨텍스트에서 분리하는게 최선이다.  
 ### 메소드 정리
 - `static <T> Flux<T> defer(Supplier<? extends Publisher<T>> supplier)`: `Publisher Supplier` 구독에서 만들어진 요소들을 Flux로 반환한다. 
 - `Flux<T> subscribeOn(Scheduler scheduler)`: 이전의 Publisher 체인과 이후의 Subscriber 체인을 묶어서 별도의 시퀀스(쓰레드)로 분리한다. (느린 Publisher + 빠른 Subsriber로 체인이 구성될때 사용. [참고](https://wiki.terzeron.com/Programming/Java/Reactor_Flux%EC%9D%98_publishOn_subscribeOn%EC%9D%84_%EC%9D%B4%EC%9A%A9%ED%95%9C_%EC%8A%A4%EC%BC%80%EC%A5%B4%EB%A7%81))
-- `Flux<T> publishOn(Scheduler scheduler)` : 이후의 Subscriber 체인만 별도의 시퀀스(쓰레드)로 분리한다. (느린 Publisher + 빠른 Subsriber로 체인이 구성될때 사용)
+- `Flux<T> publishOn(Scheduler scheduler)` : 이후의 Subscriber 체인만 별도의 시퀀스(쓰레드)로 분리한다. (빠른 Publisher + 느린 Subsriber로 체인이 구성될때 사용)
 `Scheduler`인 `Schedulers.boundedElastic()`은 필요한 만큼 쓰레드를 생성하고 자동적으로 쓰레드를 관리한다.
 ### 예제: src/main/java/study/practice/Part11BlockingToReactive
 ```java
