@@ -318,10 +318,10 @@ Reactor는 많은 연산자들이 있으므로
 - `zip`: **두개 이상의 소스를 합친다.** 다양한 형태로 제공된다.
 - `firstWithValue`: 여러 Publisher 소스들 중 하나를 먼저 골라 전달할 수 있다.
 - `Mono<T> ignoreElements()`: `OnNext`: 신호를 무시한다.
-- `Mono<Void> then()`: 해당 Mono에 완료 신호를 보내고 Mono<Void>를 리턴한다.
-- `Mono<T> justOrEmpty(@Nullable T data)`: 인자(data)가 null이면 Mono<Void>를 리턴하고, not null이면 Mono.just(data)를 리턴한다.
+- `Mono<Void> then()`: 해당 Mono에 완료 신호를 보내고 `Mono<Void>`를 리턴한다.
+- `Mono<T> justOrEmpty(@Nullable T data)`: 인자(data)가 null이면 `Mono<Void>`를 리턴하고, not null이면 Mono.just(data)를 리턴한다.
 - `Mono<T> switchIfEmpty(Mono<? extends T> alternate)`: 해당 Mono가 null이면 인자로 받은 Mono(alternate)를 리턴하고, not null이면 해당 Mono  리턴한다.
-- `Mono<List<T>> collectList()`: Flux<T>를 Mono<List<T>>로 변환한다.
+- `Mono<List<T>> collectList()`: `Flux<T>`를 `Mono<List<T>>`로 변환한다.
 ### 예제: src/main/java/study/practice/Part08OtherOperations.java
 ```java
 public class Part08OtherOperations {
@@ -360,6 +360,72 @@ public class Part08OtherOperations {
   // TODO Convert the input Flux<User> to a Mono<List<User>> containing list of collected flux values
   Mono<List<User>> fluxCollection(Flux<User> flux) {
     return flux.collectList();
+  }
+
+}
+```
+## 9. Adapt
+Reactor는 같은 Reative Streams의 구현체인 RxJava 3와 상호작용이 가능하다.
+그리고 Mono 클래스는 Java 8+에서 지원하는 CompletableFuture 클래스와 상호작용이 가능하다.
+### 메소드 정리
+- **Flux**
+  - `static <T> Flux<T> from(Publisher<? extends T> source)`: Publisher(rxjava의 Flowable 같은)를 Flux 객체로 변환한다.
+- **Flowable**
+  - `static <T> Flowable<T> fromPublisher(Publisher<? extends T> publisher)`: Publisher(Flux 같은)를 Flowable 객체로 변환한다.
+- **Observable**
+  - `static <T> Observable<T> fromPublisher(Publisher<? extends T> publisher)`: Publisher를 Observable 객체로 변환한다.
+  - `Flowable<T> toFlowable(BackpressureStrategy strategy)`: 해당 Observable(rxjava) 객체를 Flowable 객체로 변환한다. (Observable는 backpressure을 지원하지않아 strategy를 정의해줘야만 한다.)
+- **Single**
+  - `static <T> Single<T> fromPublisher(Publisher<? extends T> publisher)`: Publisher(Mono 같은)를 rxjava의 Single 객체로 변환한다.
+- **Mono**
+  - `static <T> Mono<T> from(Publisher<? extends T> source)`: Publisher(Single 같은)를 Mono객체로 변환한다.
+  - `CompletableFuture<T> toFuture()`: 해당 Mono객체를 CompletableFuture 객체로 변환한다.
+  - `static <T> Mono<T> fromFuture(CompletableFuture<? extends T> future)`: CompletableFuture를 Mono 객체로 변환한다.
+### 예제: src/main/java/study/practice/Part09Adapt.java
+```java
+public class Part09Adapt {
+  
+  // TODO Adapt Flux to RxJava Flowable
+  Flowable<User> fromFluxToFlowable(Flux<User> flux) {
+    return Flowable.fromPublisher(flux);
+  }
+
+  // TODO Adapt RxJava Flowable to Flux
+  Flux<User> fromFlowableToFlux(Flowable<User> flowable) {
+    return Flux.from(flowable);
+  }
+
+
+  // TODO Adapt Flux to RxJava Observable
+  Observable<User> fromFluxToObservable(Flux<User> flux) {
+    return Observable.fromPublisher(flux);
+  }
+
+  // TODO Adapt RxJava Observable to Flux
+  Flux<User> fromObservableToFlux(Observable<User> observable) {
+    return Flux.from(observable.toFlowable(BackpressureStrategy.BUFFER));
+  }
+
+
+  // TODO Adapt Mono to RxJava Single
+  Single<User> fromMonoToSingle(Mono<User> mono) {
+    return Single.fromPublisher(mono);
+  }
+
+  // TODO Adapt RxJava Single to Mono
+  Mono<User> fromSingleToMono(Single<User> single) {
+    return Mono.from(single.toFlowable());
+  }
+
+
+  // TODO Adapt Mono to Java 8+ CompletableFuture
+  CompletableFuture<User> fromMonoToCompletableFuture(Mono<User> mono) {
+    return mono.toFuture();
+  }
+
+  // TODO Adapt Java 8+ CompletableFuture to Mono
+  Mono<User> fromCompletableFutureToMono(CompletableFuture<User> future) {
+    return Mono.fromFuture(future);
   }
 
 }
