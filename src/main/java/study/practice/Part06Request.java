@@ -18,7 +18,7 @@ import study.repository.ReactiveUserRepository;
  */
 public class Part06Request {
 
-  ReactiveRepository<User> repository = new ReactiveUserRepository();
+  ReactiveUserRepository repository = new ReactiveUserRepository();
 
 //========================================================================================
 

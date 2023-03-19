@@ -17,6 +17,11 @@ public class ReactiveUserRepository implements ReactiveRepository<User> {
     return Mono.empty();
   }
 
+//  Part11BlockingToReative 2번 예제에서 repository.save하는 부분에서 argument가 Publisher가 아닌 User로 오버로딩함.
+  public Mono<Void> save(User user){
+    return Mono.empty();
+  }
+
   @Override
   public Mono<User> findFirst() {
     return Mono.just(User.SKYLER);
