@@ -365,7 +365,7 @@ public class Part08OtherOperations {
 }
 ```
 ## 9. Adapt
-Reactor는 같은 Reative Streams의 구현체인 RxJava 3와 상호작용이 가능하다.
+Reactor는 같은 Reative Streams의 구현체인 RxJava 3와 상호작용이 가능하다.  
 그리고 Mono 클래스는 Java 8+에서 지원하는 CompletableFuture 클래스와 상호작용이 가능하다.
 ### 메소드 정리
 - **Flux**
@@ -426,6 +426,32 @@ public class Part09Adapt {
   // TODO Adapt Java 8+ CompletableFuture to Mono
   Mono<User> fromCompletableFutureToMono(CompletableFuture<User> future) {
     return Mono.fromFuture(future);
+  }
+
+}
+```
+## 10. Reactive To Blocking
+Reactive 코드 일부를 Blocking하게 만들 수도 있다. **(Reactive 파이프라인 내에서 lock이 발생 할 수도 있기 때문에 가급적이면 Blocking을 피하는게 좋다.)**  
+예를 들어, Mono의 데이터를 쓸 수 있을 때 까지 block을 해야한다면, `block()`메소드를 사용하면 된다. (`onError` 이벤트가 발생하면 `Exception`이 발생한다.)
+### 메소드 정리
+- Mono
+  - `T block()`: 해당 Mono를 구독하고 값을 전달 받을 때까지 block한 후 값을 반환한다.
+- Flux
+  - `Iterable<T> toIterable()`: 해당 Flux를 구독하고 모든 값을 전달 받을 때까지 block한 후 Iterable 객체로 반환한다.
+  - `T blockFirst()`: 해당 Flux를 구독하고 첫번째 값을 전달 받을 때까지 block한 후 첫번쨰 값을 반환한다.
+  - `T blockLast()`: 해당 Flux를 구독하고 마지막 값을 전달 받을 때까지 block한 후 마지막 값을 반환한다.
+### 예제: src/main/java/study/practice/Part10ReactiveToBlocking
+```java
+public class Part10ReactiveToBlocking {
+
+  // TODO Return the user contained in that Mono
+  User monoToValue(Mono<User> mono) {
+    return mono.block();
+  }
+  
+  // TODO Return the users contained in that Flux
+  Iterable<User> fluxToValues(Flux<User> flux) {
+    return flux.toIterable();
   }
 
 }
